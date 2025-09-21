@@ -113,7 +113,7 @@
 
 					<Border Grid.Row="0" Background="Transparent" Margin="0,0,0,6">
 						<ScrollViewer x:Name="TabsScroller"
-									  VerticalScrollBarVisibility="Auto"
+									  VerticalScrollBarVisibility="Hidden"
 									  HorizontalScrollBarVisibility="Disabled"
 									  CanContentScroll="True"
 									  PanningMode="VerticalFirst">
