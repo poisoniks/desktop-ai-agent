@@ -31,10 +31,27 @@ namespace TrayPopupApp
             set { _selectedTab = value; OnPropertyChanged(nameof(SelectedTab)); }
         }
 
+        private bool _isSettingsActive;
+        public bool IsSettingsActive
+        {
+            get => _isSettingsActive;
+            set { _isSettingsActive = value; OnPropertyChanged(nameof(IsSettingsActive)); OnPropertyChanged(nameof(ActiveContent)); }
+        }
+
+        private FrameworkElement? _settingsContent;
+        public FrameworkElement? SettingsContent
+        {
+            get => _settingsContent;
+            set { _settingsContent = value; OnPropertyChanged(nameof(SettingsContent)); OnPropertyChanged(nameof(ActiveContent)); }
+        }
+
+        public object? ActiveContent => IsSettingsActive ? (object?)SettingsContent : SelectedTab?.Content;
+
         public MainWindow()
         {
             InitializeComponent();
             DataContext = this;
+            SettingsContent = BuildSettingsView();
             InitTabs();
         }
 
@@ -69,11 +86,21 @@ namespace TrayPopupApp
 
         private void Select(TabItemVm vm)
         {
+            IsSettingsActive = false;
             foreach (var t in Tabs)
                 t.IsSelected = false;
 
             vm.IsSelected = true;
             SelectedTab = vm;
+            OnPropertyChanged(nameof(ActiveContent));
+        }
+
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var t in Tabs) t.IsSelected = false;
+            SelectedTab = null;
+            IsSettingsActive = true;
+            OnPropertyChanged(nameof(ActiveContent));
         }
 
         private TabItemVm NewContentTab(string title, Geometry icon)
@@ -95,6 +122,24 @@ namespace TrayPopupApp
                 Icon = icon,
                 Content = grid
             };
+        }
+
+        private FrameworkElement BuildSettingsView()
+        {
+            var p = new StackPanel { Margin = new Thickness(24) };
+            p.Children.Add(new TextBlock
+            {
+                Text = "Settings",
+                FontSize = 22,
+                Foreground = new SolidColorBrush(Color.FromRgb(230, 230, 230)),
+                Margin = new Thickness(0, 0, 0, 8)
+            });
+            p.Children.Add(new TextBlock
+            {
+                Text = "Application settings will be there...",
+                Foreground = new SolidColorBrush(Color.FromRgb(200, 200, 200))
+            });
+            return p;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e) => PositionBottomRight();
