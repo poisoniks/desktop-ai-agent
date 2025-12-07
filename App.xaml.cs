@@ -1,13 +1,15 @@
 ﻿using System.Windows;
 using System.Windows.Input;
+using System.Windows.Controls;
+using System.Windows.Media.Imaging;
+using Hardcodet.Wpf.TaskbarNotification;
 using DesktopAIAgent.Service;
-using Forms = System.Windows.Forms;
 
 namespace DesktopAIAgent
 {
     public partial class App : System.Windows.Application
     {
-        private Forms.NotifyIcon? _trayIcon;
+        private TaskbarIcon? _trayIcon;
         private MainWindow? _window;
         private IGlobalHotkeyService? _hotkeyService;
 
@@ -31,22 +33,24 @@ namespace DesktopAIAgent
             uint key = (uint)KeyInterop.VirtualKeyFromKey(Key.T);
             _hotkeyService.Register(_window, HOTKEY_ID, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, key);
 
-            _trayIcon = new Forms.NotifyIcon
+            _trayIcon = new TaskbarIcon
             {
-                Text = "AI Agent",
-                Visible = true,
-                Icon = LoadIconOrFallback()
+                ToolTipText = "AI Agent",
+                IconSource = new BitmapImage(new Uri("pack://application:,,,/Assets/app.ico"))
             };
 
-            var menu = new Forms.ContextMenuStrip();
-            menu.Items.Add("Show", null, (_, __) => ToggleWindow());
-            menu.Items.Add("Exit", null, (_, __) => ExitApp());
-            _trayIcon.ContextMenuStrip = menu;
+            var menu = new ContextMenu();
+            var showItem = new MenuItem { Header = "Show" };
+            showItem.Click += (_, __) => ToggleWindow();
+            menu.Items.Add(showItem);
 
-            _trayIcon.MouseClick += (s, args) =>
-            {
-                if (args.Button == Forms.MouseButtons.Left) ToggleWindow();
-            };
+            var exitItem = new MenuItem { Header = "Exit" };
+            exitItem.Click += (_, __) => ExitApp();
+            menu.Items.Add(exitItem);
+
+            _trayIcon.ContextMenu = menu;
+
+            _trayIcon.TrayLeftMouseUp += (_, __) => ToggleWindow();
 
             ToggleWindow();
         }
@@ -82,17 +86,7 @@ namespace DesktopAIAgent
             }
         }
 
-        private Icon LoadIconOrFallback()
-        {
-            try
-            {
-                var uri = new Uri("pack://application:,,,/Assets/app.ico", UriKind.Absolute);
-                using var stream = GetResourceStream(uri)?.Stream;
-                if (stream != null) return new Icon(stream);
-            }
-            catch { }
-            return SystemIcons.Application;
-        }
+
 
         private void ExitApp()
         {
